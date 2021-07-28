@@ -44,6 +44,15 @@ class WebAmpWin96 extends w96.WApplication {
 
 		let blobs = await Promise.all(paths.map(path => w96.FS.toBlob(path)));
 
+		let skins = [];
+
+		try {
+			let skin_paths = w96.FS.readdir("C:/local/webamp/skins");
+			let skin_blobs = await Promise.all(skin_paths.map(async path => ({"blob": await w96.FS.toBlob(path), "name": w96.FSUtil.fname(path).slice(0, -4)})));
+			skins = skin_blobs.map(skin_blob => ({url: URL.createObjectURL(skin_blob.blob), name: skin_blob.name}));
+			
+		} catch(e) {}
+
 		let webamp = new Webamp({
 			initialTracks: blobs.map(blob => {
 				return {blob: blob};
@@ -57,12 +66,16 @@ class WebAmpWin96 extends w96.WApplication {
 						dialog.show();
 					}).then(path => w96.FS.toBlob(path)).then(blob => [{blob: blob}]);
 				}
-			}]
+			}],
+			availableSkins: skins
 		});
 		await webamp.renderWhenReady(wnd.getBodyContainer().querySelector("div"));
 		wnd.onclose = () => {
 			webamp.close();
 			webamp.dispose();
+			for(skin of skins) {
+				URL.revokeObjectURL(skin.url);
+			}
 		};
 	}
 }
