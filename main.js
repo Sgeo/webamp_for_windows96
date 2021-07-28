@@ -47,7 +47,17 @@ class WebAmpWin96 extends w96.WApplication {
 		let webamp = new Webamp({
 			initialTracks: blobs.map(blob => {
 				return {blob: blob};
-			})
+			}),
+			filePickers: [{
+				contextMenuName: "Windows 96...",
+				requresNetwork: false,
+				filePicker: () => {
+					return new Promise((resolve, reject) => {
+						let dialog = new w96.ui.OpenFileDialog("C:/", ["mp3"], resolve);
+						dialog.show();
+					}).then(path => w96.FS.toBlob(path)).then(blob => [{blob: blob}]);
+				}
+			}]
 		});
 		await webamp.renderWhenReady(wnd.getBodyContainer().querySelector("div"));
 		wnd.onclose = () => {
